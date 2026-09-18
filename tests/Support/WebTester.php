@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Support;
 
+use App\Tests\Support\Database\DatabaseHelper;
+
 /**
  * Inherited Methods
  * @method void wantTo($text)
@@ -26,4 +28,14 @@ class WebTester extends \Codeception\Actor
     /**
      * Define custom actions here
      */
+
+    /**
+     * Services bound to the test database, for setting up fixtures.
+     *
+     * The web suite talks to a server running with `APP_ENV=test`, so it reads the same SQLite file.
+     */
+    public function services(): Services
+    {
+        return new Services(DatabaseHelper::createConnection('sqlite:' . DatabaseHelper::testDatabasePath()));
+    }
 }

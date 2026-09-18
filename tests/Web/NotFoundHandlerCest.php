@@ -25,7 +25,8 @@ final class NotFoundHandlerCest
         $I->amOnPage('/non-existent-page');
         $I->canSeeResponseCodeIs(404);
         $I->click('Go Back Home');
-        $I->expectTo('see page home.');
-        $I->see('Hello!');
+        $I->expectTo('be asked to sign in, because the home page is private.');
+        $I->seeInCurrentUrl('/login');
+        $I->see('Sign in');
     }
 }

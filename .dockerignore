@@ -3,6 +3,8 @@
 
 # except:
 
+# The directory itself must be re-included, otherwise its files cannot be re-included.
+!/docker
 !/docker/**/Caddyfile
 !/config
 !/public

@@ -14,23 +14,26 @@ use Yiisoft\Html\Html;
 $this->setTitle('404');
 ?>
 
-<div class="text-center">
-    <h1>
+<div class="status-panel">
+    <span class="status-icon">
+        <i class="fa-solid fa-compass" aria-hidden="true"></i>
+    </span>
+    <h1 class="status-title">
         404
     </h1>
 
-    <p>
+    <p class="status-text">
         The page
         <strong><?= Html::encode($currentRoute->getUri()?->getPath() ?? 'unknown') ?></strong>
         not found.
     </p>
 
-    <p>
+    <p class="status-text">
         The above error occurred while the Web server was processing your request.<br/>
         Please contact us if you think this is a server error. Thank you.
     </p>
 
     <p>
-        <a href="<?= $urlGenerator->generate('home') ?>">Go Back Home</a>
+        <a class="button" href="<?= $urlGenerator->generate('home') ?>">Go Back Home</a>
     </p>
 </div>
