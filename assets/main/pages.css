@@ -1,0 +1,191 @@
+/*
+ * Page specific rules: login, dashboard, product detail, public pages, print.
+ */
+
+/* Login */
+
+.login-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--color-surface-inverse);
+    padding: var(--space-5);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 380px;
+    padding: var(--space-6);
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border-strong);
+}
+
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.login-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--color-surface-inverse);
+    color: var(--color-text-inverse);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+}
+
+.login-title {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--space-5);
+}
+
+.login-hint {
+    margin-top: var(--space-5);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+/* Dashboard */
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+.stat {
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+}
+
+.stat-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+}
+
+.stat-value {
+    display: block;
+    margin-top: var(--space-2);
+    font-size: var(--font-size-xxl);
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: var(--space-5);
+}
+
+@media (max-width: 1000px) {
+    .split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Product detail and QR */
+
+.product-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-bottom: var(--space-4);
+}
+
+.qr-card {
+    text-align: center;
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.qr-card svg {
+    display: block;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto var(--space-3);
+}
+
+/* Public product page (no authentication) */
+
+.public-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-5);
+}
+
+.public-header {
+    border-bottom: 3px solid var(--color-surface-inverse);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+.public-brand {
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-muted);
+}
+
+.public-title {
+    margin: var(--space-2) 0 var(--space-1);
+}
+
+.public-footer {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-faint);
+}
+
+/* Inventory movement direction shown as text marker */
+
+.movement-in {
+    font-weight: 600;
+}
+
+.movement-out {
+    font-weight: 600;
+}
+
+/* Print: used by the PDF export and by printing pages from the browser */
+
+@media print {
+    .sidebar,
+    .topbar,
+    .footer,
+    .filters,
+    .form-actions,
+    .table-actions {
+        display: none !important;
+    }
+
+    .app-shell {
+        display: block;
+    }
+
+    .content,
+    .public-page {
+        padding: 0;
+    }
+
+    .panel,
+    .table {
+        border: 0;
+    }
+
+    body {
+        background: var(--color-surface);
+    }
+}

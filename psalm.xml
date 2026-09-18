@@ -21,5 +21,7 @@
     <issueHandlers>
         <MixedAssignment errorLevel="suppress" />
         <RiskyTruthyFalsyComparison errorLevel="suppress" />
+        <!-- PHP view templates use $this bound by the view renderer. -->
+        <InvalidScope errorLevel="suppress" />
     </issueHandlers>
 </psalm>

@@ -1,1 +1,4 @@
 actor: FunctionalTester
+extensions:
+  enabled:
+    - App\Tests\Support\Extension\DatabaseReset

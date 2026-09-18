@@ -50,6 +50,9 @@ return [
             'params' => [
                 'environments/test/params.php',
             ],
+            'di' => [
+                'environments/test/di/*.php',
+            ],
         ],
         Environment::PROD => [
             'params' => [
