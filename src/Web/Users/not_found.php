@@ -11,8 +11,11 @@ use Yiisoft\View\WebView;
 $this->setTitle('User not found');
 ?>
 
-<div class="panel">
-    <h1>User not found</h1>
-    <p class="muted">This account does not exist.</p>
+<div class="status-panel">
+    <span class="status-icon status-icon-warning">
+        <i class="fa-solid fa-user-slash" aria-hidden="true"></i>
+    </span>
+    <h1 class="status-title">User not found</h1>
+    <p class="status-text">This account does not exist.</p>
     <p><a class="button" href="/users">Back to users</a></p>
 </div>

@@ -26,33 +26,52 @@ $this->setTitle($product->name);
 $canManage = $currentUser->can(Permission::ProductManage);
 $canOperate = $currentUser->can(Permission::StockOperate);
 $publicUrl = $urlGenerator->generateAbsolute('public-product', ['token' => $product->qrToken]);
+$totalOnHand = 0;
+
+foreach ($levels as $level) {
+    $totalOnHand += $level->onHand;
+}
 ?>
 
-<div class="product-header">
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="<?= $urlGenerator->generate('product-list') ?>">Products</a>
+    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    <span class="faint"><?= Html::encode($product->sku) ?></span>
+</nav>
+
+<div class="page-header">
     <div>
-        <h1><?= Html::encode($product->name) ?></h1>
-        <p class="muted">
-            SKU <span class="mono"><?= Html::encode($product->sku) ?></span>
-            · <?= Html::encode($product->unit) ?>
+        <h1 class="page-title"><?= Html::encode($product->name) ?></h1>
+        <div class="product-meta">
+            <span class="badge badge-info mono"><?= Html::encode($product->sku) ?></span>
+            <span><?= Html::encode($product->unit) ?></span>
             <?php if ($product->lowStockThreshold !== null): ?>
-                · low stock threshold <?= $product->lowStockThreshold ?>
+                <span class="badge">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    Threshold <?= $product->lowStockThreshold ?>
+                </span>
             <?php endif ?>
             <?php if (!$product->isActive): ?>
-                · <span class="badge">Inactive</span>
+                <span class="badge">Inactive</span>
             <?php endif ?>
-        </p>
+        </div>
     </div>
 
-    <div class="row">
+    <div class="page-actions">
         <?php if ($canManage): ?>
-            <a class="button button-quiet"
-               href="<?= $urlGenerator->generate('product-edit', ['id' => $product->id]) ?>">Edit</a>
+            <a class="button button-quiet" href="<?= $urlGenerator->generate('product-edit', ['id' => $product->id]) ?>">
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                Edit
+            </a>
         <?php endif ?>
         <?php if ($canManage && $product->isActive): ?>
             <form method="post" action="<?= $urlGenerator->generate('product-delete', ['id' => $product->id]) ?>"
                   onsubmit="return confirm('Deactivate this product?');">
                 <input type="hidden" name="_csrf" value="<?= Html::encode($csrf ?? '') ?>">
-                <button type="submit" class="button button-danger">Deactivate</button>
+                <button type="submit" class="button button-danger">
+                    <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                    Deactivate
+                </button>
             </form>
         <?php endif ?>
     </div>
@@ -60,15 +79,32 @@ $publicUrl = $urlGenerator->generateAbsolute('public-product', ['token' => $prod
 
 <?php if ($product->description !== null): ?>
     <div class="panel">
-        <p><?= nl2br(Html::encode($product->description)) ?></p>
+        <p class="muted"><?= nl2br(Html::encode($product->description)) ?></p>
     </div>
 <?php endif ?>
+
+<div class="stat-grid">
+    <div class="stat">
+        <span class="stat-label">Variants</span>
+        <span class="stat-value"><?= count($levels) ?></span>
+    </div>
+    <div class="stat">
+        <span class="stat-label">Units on hand</span>
+        <span class="stat-value"><?= $totalOnHand ?></span>
+    </div>
+</div>
 
 <div class="split">
     <div>
         <div class="panel">
             <div class="panel-header">
-                <h2 class="panel-title">Variants and stock</h2>
+                <div>
+                    <h2 class="panel-title">
+                        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                        Variants and stock
+                    </h2>
+                    <p class="panel-subtitle">Every combination keeps its own ledger.</p>
+                </div>
                 <?php if ($canOperate): ?>
                     <a class="button-link"
                        href="<?= $urlGenerator->generate('stock-list', ['search' => $product->sku]) ?>">All movements</a>
@@ -76,7 +112,10 @@ $publicUrl = $urlGenerator->generateAbsolute('public-product', ['token' => $prod
             </div>
 
             <?php if ($levels === []): ?>
-                <p class="empty-state">This product has no variants yet.</p>
+                <p class="empty-state">
+                    <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                    <span>This product has no variants yet.</span>
+                </p>
             <?php else: ?>
                 <table class="table">
                     <thead>
@@ -90,21 +129,31 @@ $publicUrl = $urlGenerator->generateAbsolute('public-product', ['token' => $prod
                     <tbody>
                     <?php foreach ($levels as $level): ?>
                         <tr>
-                            <td class="mono"><?= Html::encode($level->variantSku) ?></td>
+                            <td><span class="mono cell-title"><?= Html::encode($level->variantSku) ?></span></td>
                             <td>
-                                <?php foreach ($variantsById[$level->variantId]->optionLabels ?? [] as $label): ?>
-                                    <span class="badge"><?= Html::encode($label) ?></span>
-                                <?php endforeach ?>
-                                <?php if ($level->isDefaultVariant): ?>
-                                    <span class="faint">default</span>
-                                <?php endif ?>
-                                <?php if (!$level->isActiveVariant): ?>
-                                    <span class="badge">inactive</span>
+                                <span class="product-meta">
+                                    <?php foreach ($variantsById[$level->variantId]->optionLabels ?? [] as $label): ?>
+                                        <span class="badge badge-info"><?= Html::encode($label) ?></span>
+                                    <?php endforeach ?>
+                                    <?php if ($level->isDefaultVariant): ?>
+                                        <span class="faint">default</span>
+                                    <?php endif ?>
+                                    <?php if (!$level->isActiveVariant): ?>
+                                        <span class="badge">inactive</span>
+                                    <?php endif ?>
+                                </span>
+                            </td>
+                            <td class="table-numeric">
+                                <?php if ($level->onHand <= 0): ?>
+                                    <span class="badge badge-danger"><?= $level->onHand ?></span>
+                                <?php elseif ($level->isLowStock()): ?>
+                                    <span class="badge badge-warning"><?= $level->onHand ?></span>
+                                <?php else: ?>
+                                    <span class="cell-title"><?= $level->onHand ?></span>
                                 <?php endif ?>
                             </td>
-                            <td class="table-numeric"><?= $level->onHand ?></td>
                             <td class="table-actions">
-                                <a class="button-link"
+                                <a class="button button-quiet button-small"
                                    href="<?= $urlGenerator->generate('stock-variant', ['id' => $level->variantId]) ?>">
                                     History
                                 </a>
@@ -119,13 +168,22 @@ $publicUrl = $urlGenerator->generateAbsolute('public-product', ['token' => $prod
 
     <div>
         <div class="panel qr-card">
+            <h2 class="panel-title">
+                <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+                Shelf label
+            </h2>
             <img src="<?= $urlGenerator->generate('public-product-qr', ['token' => $product->qrToken]) ?>"
                  alt="QR code for <?= Html::encode($product->name) ?>" width="200" height="200">
             <p class="field-hint">Print this code on the shelf label.</p>
             <p><a href="<?= Html::encode($publicUrl) ?>" target="_blank" rel="noopener">Open product page</a></p>
-            <p><a class="button button-quiet"
-                  href="<?= $urlGenerator->generate('public-product-qr', ['token' => $product->qrToken]) ?>"
-                  download="qr-<?= Html::encode($product->sku) ?>.svg">Download SVG</a></p>
+            <p>
+                <a class="button button-quiet button-small"
+                   href="<?= $urlGenerator->generate('public-product-qr', ['token' => $product->qrToken]) ?>"
+                   download="qr-<?= Html::encode($product->sku) ?>.svg">
+                    <i class="fa-solid fa-download" aria-hidden="true"></i>
+                    Download SVG
+                </a>
+            </p>
         </div>
     </div>
 </div>

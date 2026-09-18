@@ -30,18 +30,41 @@ $this->setTitle($isEdit ? 'Edit product' : 'New product');
 $action = $isEdit && $product !== null
     ? $urlGenerator->generate('product-edit-submit', ['id' => $product->id])
     : $urlGenerator->generate('product-create-submit');
+$cancelUrl = $isEdit && $product !== null
+    ? $urlGenerator->generate('product-view', ['id' => $product->id])
+    : $urlGenerator->generate('product-list');
 ?>
 
-<h1><?= $isEdit ? 'Edit product' : 'New product' ?></h1>
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><?= $isEdit ? 'Edit product' : 'New product' ?></h1>
+        <p class="page-subtitle">
+            Option values combine into variants; each variant keeps its own stock ledger.
+        </p>
+    </div>
+</div>
 
 <?php foreach ($errors as $error): ?>
-    <div class="alert alert-error" role="alert"><?= Html::encode($error) ?></div>
+    <div class="alert alert-error" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <span><?= Html::encode($error) ?></span>
+    </div>
 <?php endforeach ?>
 
 <form method="post" action="<?= $action ?>">
     <input type="hidden" name="_csrf" value="<?= Html::encode($csrf ?? '') ?>">
 
     <div class="panel">
+        <div class="panel-header">
+            <div>
+                <h2 class="panel-title">
+                    <i class="fa-solid fa-cube" aria-hidden="true"></i>
+                    Details
+                </h2>
+                <p class="panel-subtitle">How the product is identified in the catalogue.</p>
+            </div>
+        </div>
+
         <div class="form-grid">
             <div class="field">
                 <label class="field-label" for="sku">SKU</label>
@@ -54,7 +77,7 @@ $action = $isEdit && $product !== null
             <div class="field">
                 <label class="field-label" for="unit">Unit</label>
                 <input type="text" id="unit" name="unit" value="<?= Html::encode($input->unit) ?>"
-                       placeholder="piece, foot, meter...">
+                       placeholder="piece, foot, meter…">
             </div>
             <div class="field">
                 <label class="field-label" for="lowStockThreshold">Low stock threshold</label>
@@ -76,14 +99,23 @@ $action = $isEdit && $product !== null
 
     <div class="panel">
         <div class="panel-header">
-            <h2 class="panel-title">Options</h2>
-            <span class="faint">Each selected value becomes part of the variant combinations.</span>
+            <div>
+                <h2 class="panel-title">
+                    <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+                    Options
+                </h2>
+                <p class="panel-subtitle">Each selected value becomes part of the variant combinations.</p>
+            </div>
         </div>
 
         <?php if ($types === []): ?>
-            <p class="muted">
-                No option types yet. <a href="<?= $urlGenerator->generate('option-list') ?>">Create option types</a>
-                to sell the same product in several sizes, colours, etc.
+            <p class="empty-state">
+                <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+                <span>
+                    No option types yet.
+                    <a href="<?= $urlGenerator->generate('option-list') ?>">Create option types</a>
+                    to sell the same product in several sizes, colours, etc.
+                </span>
             </p>
         <?php else: ?>
             <div class="form-grid">
@@ -108,10 +140,10 @@ $action = $isEdit && $product !== null
     </div>
 
     <div class="form-actions">
-        <button type="submit" class="button"><?= $isEdit ? 'Save changes' : 'Create product' ?></button>
-        <a class="button button-quiet"
-           href="<?= $isEdit && $product !== null
-               ? $urlGenerator->generate('product-view', ['id' => $product->id])
-               : $urlGenerator->generate('product-list') ?>">Cancel</a>
+        <button type="submit" class="button">
+            <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+            <?= $isEdit ? 'Save changes' : 'Create product' ?>
+        </button>
+        <a class="button button-quiet" href="<?= $cancelUrl ?>">Cancel</a>
     </div>
 </form>

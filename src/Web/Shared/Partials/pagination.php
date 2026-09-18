@@ -25,17 +25,29 @@ $link = static fn(int $page): string => $urlGenerator->generate($route, [...$par
     <ul class="pagination">
         <li>
             <?php if ($pagination->hasPrevious()): ?>
-                <a href="<?= $link($pagination->previousPage()) ?>">Previous</a>
+                <a href="<?= $link($pagination->previousPage()) ?>">
+                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                    Previous
+                </a>
             <?php else: ?>
-                <span class="faint">Previous</span>
+                <span class="faint">
+                    <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                    Previous
+                </span>
             <?php endif ?>
         </li>
-        <li><span class="is-current"><?= $pagination->page ?> / <?= $pagination->pageCount() ?></span></li>
+        <li><span class="is-current">Page <?= $pagination->page ?> of <?= $pagination->pageCount() ?></span></li>
         <li>
             <?php if ($pagination->hasNext()): ?>
-                <a href="<?= $link($pagination->nextPage()) ?>">Next</a>
+                <a href="<?= $link($pagination->nextPage()) ?>">
+                    Next
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </a>
             <?php else: ?>
-                <span class="faint">Next</span>
+                <span class="faint">
+                    Next
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </span>
             <?php endif ?>
         </li>
     </ul>

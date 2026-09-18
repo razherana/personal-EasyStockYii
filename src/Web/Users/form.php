@@ -28,10 +28,24 @@ $action = $isEdit
     : $urlGenerator->generate('user-create-submit');
 ?>
 
-<h1><?= $isEdit ? 'Edit user' : 'New user' ?></h1>
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="<?= $urlGenerator->generate('user-list') ?>">Users</a>
+    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    <span class="faint"><?= $isEdit ? Html::encode($user->username) : 'New user' ?></span>
+</nav>
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title"><?= $isEdit ? 'Edit user' : 'New user' ?></h1>
+        <p class="page-subtitle">Account details, role and password.</p>
+    </div>
+</div>
 
 <?php foreach ($errors as $error): ?>
-    <div class="alert alert-error" role="alert"><?= Html::encode($error) ?></div>
+    <div class="alert alert-error" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <span><?= Html::encode($error) ?></span>
+    </div>
 <?php endforeach ?>
 
 <div class="split">
@@ -39,6 +53,16 @@ $action = $isEdit
         <input type="hidden" name="_csrf" value="<?= Html::encode($csrf ?? '') ?>">
 
         <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">
+                        <i class="fa-solid fa-id-card" aria-hidden="true"></i>
+                        Account
+                    </h2>
+                    <p class="panel-subtitle">How this person signs in and what they may do.</p>
+                </div>
+            </div>
+
             <div class="form-grid">
                 <?php if (!$isEdit): ?>
                     <div class="field">
@@ -88,7 +112,10 @@ $action = $isEdit
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="button"><?= $isEdit ? 'Save changes' : 'Create user' ?></button>
+                <button type="submit" class="button">
+                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                    <?= $isEdit ? 'Save changes' : 'Create user' ?>
+                </button>
                 <a class="button button-quiet" href="<?= $urlGenerator->generate('user-list') ?>">Cancel</a>
             </div>
         </div>
@@ -96,7 +123,15 @@ $action = $isEdit
 
     <div>
         <div class="panel">
-            <h2 class="panel-title">Permissions per role</h2>
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                        Permissions per role
+                    </h2>
+                </div>
+            </div>
+
             <table class="table">
                 <thead>
                 <tr>
@@ -107,11 +142,13 @@ $action = $isEdit
                 <tbody>
                 <?php foreach (UserRole::cases() as $role): ?>
                     <tr>
-                        <td><?= Html::encode($role->label()) ?></td>
+                        <td><span class="cell-title"><?= Html::encode($role->label()) ?></span></td>
                         <td>
-                            <?php foreach ($rolePermissions->all($role) as $permission): ?>
-                                <span class="badge"><?= Html::encode($permission->value) ?></span>
-                            <?php endforeach ?>
+                            <span class="product-meta">
+                                <?php foreach ($rolePermissions->all($role) as $permission): ?>
+                                    <span class="badge badge-info"><?= Html::encode($permission->value) ?></span>
+                                <?php endforeach ?>
+                            </span>
                         </td>
                     </tr>
                 <?php endforeach ?>
@@ -121,7 +158,16 @@ $action = $isEdit
 
         <?php if ($isEdit): ?>
             <div class="panel">
-                <h2 class="panel-title">Reset password</h2>
+                <div class="panel-header">
+                    <div>
+                        <h2 class="panel-title">
+                            <i class="fa-solid fa-key" aria-hidden="true"></i>
+                            Reset password
+                        </h2>
+                        <p class="panel-subtitle">The new password replaces the current one immediately.</p>
+                    </div>
+                </div>
+
                 <form method="post" action="<?= $urlGenerator->generate('user-password', ['id' => $user->id]) ?>"
                       class="stack">
                     <input type="hidden" name="_csrf" value="<?= Html::encode($csrf ?? '') ?>">
@@ -129,7 +175,10 @@ $action = $isEdit
                         <label class="field-label" for="new-password">New password</label>
                         <input type="password" id="new-password" name="password" minlength="8" required>
                     </div>
-                    <button type="submit" class="button button-quiet">Set password</button>
+                    <button type="submit" class="button button-quiet">
+                        <i class="fa-solid fa-key" aria-hidden="true"></i>
+                        Set password
+                    </button>
                 </form>
             </div>
         <?php endif ?>

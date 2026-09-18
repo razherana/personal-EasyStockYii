@@ -1,6 +1,8 @@
 /*
- * Public, unauthenticated pages: sign in and the QR code product summary.
+ * Sign in page and the public (unauthenticated) product summary.
  */
+
+/* Sign in */
 
 .login-page {
     display: flex;
@@ -8,15 +10,19 @@
     justify-content: center;
     min-height: 100vh;
     padding: var(--space-5);
-    background: var(--color-surface-inverse);
+    background:
+        radial-gradient(900px 420px at 50% -8%, var(--color-accent-soft) 0%, transparent 65%),
+        var(--color-bg);
 }
 
 .login-card {
     width: 100%;
-    max-width: 380px;
+    max-width: 420px;
     padding: var(--space-6);
     background: var(--color-surface);
-    border: var(--border-width) solid var(--color-border-strong);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
 }
 
 .login-brand {
@@ -27,73 +33,117 @@
 }
 
 .login-brand-mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: var(--color-surface-inverse);
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #34d27b, #0b7a39);
     color: var(--color-text-inverse);
     font-size: var(--font-size-sm);
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    box-shadow: var(--shadow-sm);
+}
+
+.login-brand-name {
+    font-size: var(--font-size-lg);
+    font-weight: 800;
+    letter-spacing: var(--letter-tight);
 }
 
 .login-title {
+    margin: 0 0 var(--space-1);
     font-size: var(--font-size-xl);
-    margin-bottom: var(--space-5);
+}
+
+.login-subtitle {
+    margin: 0 0 var(--space-5);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.login-form .button {
+    margin-top: var(--space-1);
+    padding-top: 12px;
+    padding-bottom: 12px;
 }
 
 .login-hint {
-    margin-top: var(--space-5);
-    font-size: var(--font-size-sm);
+    margin: var(--space-5) 0 0;
+    padding-top: var(--space-4);
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: var(--font-size-xs);
     color: var(--color-text-muted);
 }
 
+/* Public product summary */
+
 .public-page {
-    max-width: 720px;
+    width: 100%;
+    max-width: 760px;
     margin: 0 auto;
-    padding: var(--space-6) var(--space-5);
+    padding: var(--space-6) var(--space-5) var(--space-7);
 }
 
 .public-header {
-    border-bottom: 3px solid var(--color-surface-inverse);
-    padding-bottom: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-6);
     margin-bottom: var(--space-5);
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
 }
 
 .public-brand {
-    font-size: var(--font-size-sm);
-    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 11px;
+    font-weight: 700;
     letter-spacing: 0.12em;
-    color: var(--color-text-muted);
+    text-transform: uppercase;
+    color: var(--color-accent-ink);
 }
 
 .public-title {
-    margin: var(--space-2) 0 var(--space-1);
+    margin: 0;
+}
+
+.public-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
 }
 
 .public-footer {
-    margin-top: var(--space-6);
-    font-size: var(--font-size-sm);
+    margin: var(--space-6) 0 0;
+    font-size: var(--font-size-xs);
     color: var(--color-text-faint);
-}
-
-.qr-card {
     text-align: center;
-    padding: var(--space-4);
-    border: var(--border-width) solid var(--color-border);
-    background: var(--color-surface);
-}
-
-.qr-card svg {
-    display: block;
-    width: 200px;
-    height: 200px;
-    margin: 0 auto var(--space-3);
 }
 
 @media print {
     .public-page {
+        max-width: none;
         padding: 0;
+    }
+
+    .public-header,
+    .panel {
+        border-color: #d8d8d8;
+        box-shadow: none;
     }
 }

@@ -6,7 +6,11 @@ namespace App\Stock;
 
 use App\Shared\Database\Row;
 use App\Shared\Database\Timestamps;
+use DateTimeImmutable;
 use Yiisoft\Db\Connection\ConnectionInterface;
+
+use function max;
+use function sprintf;
 
 /**
  * Stores and reads the stock movement ledger.
@@ -199,6 +203,121 @@ final readonly class StockRepository
             . ' HAVING COALESCE(SUM(m.[[quantity_change]]), 0) <= p.[[low_stock_threshold]]'
             . ')',
         )->queryScalar();
+    }
+
+    /**
+     * Units booked in, out and adjusted per day, oldest first.
+     *
+     * Days without movements are not returned; callers fill the gaps.
+     *
+     * @return list<array{day: string, incoming: int, outgoing: int, adjustment: int}>
+     */
+    public function dailyMovementTotals(int $days = 14): array
+    {
+        $rows = $this->db->createCommand(
+            'SELECT date([[created_at]]) AS [[day]],'
+            . ' COALESCE(SUM(CASE WHEN [[type]] = :typeIn THEN [[quantity_change]] ELSE 0 END), 0) AS [[incoming]],'
+            . ' COALESCE(SUM(CASE WHEN [[type]] = :typeOut THEN -[[quantity_change]] ELSE 0 END), 0) AS [[outgoing]],'
+            . ' COALESCE(SUM(CASE WHEN [[type]] = :typeAdjustment THEN [[quantity_change]] ELSE 0 END), 0)'
+            . ' AS [[adjustment]]'
+            . ' FROM {{%stock_movement}}'
+            . ' WHERE [[created_at]] >= :from'
+            . ' GROUP BY date([[created_at]])'
+            . ' ORDER BY [[day]]',
+            [
+                'typeIn' => MovementType::In->value,
+                'typeOut' => MovementType::Out->value,
+                'typeAdjustment' => MovementType::Adjustment->value,
+                'from' => $this->dayStart()->modify(sprintf('-%d days', max(1, $days)))->format('Y-m-d H:i:s'),
+            ],
+        )->queryAll();
+
+        $totals = [];
+
+        foreach ($rows as $row) {
+            $totals[] = [
+                'day' => Row::string($row, 'day'),
+                'incoming' => Row::int($row, 'incoming'),
+                'outgoing' => Row::int($row, 'outgoing'),
+                'adjustment' => Row::int($row, 'adjustment'),
+            ];
+        }
+
+        return $totals;
+    }
+
+    /**
+     * How many active variants are out of stock, low on stock or healthy.
+     *
+     * @return array{out: int, low: int, healthy: int}
+     */
+    public function levelStatusCounts(): array
+    {
+        $rows = $this->db->createCommand(
+            'SELECT'
+            . ' CASE WHEN COALESCE(SUM(m.[[quantity_change]]), 0) <= 0 THEN 0'
+            . ' WHEN p.[[low_stock_threshold]] IS NOT NULL'
+            . ' AND COALESCE(SUM(m.[[quantity_change]]), 0) <= p.[[low_stock_threshold]] THEN 1'
+            . ' ELSE 2 END AS [[status]]'
+            . ' FROM {{%variant}} v'
+            . ' INNER JOIN {{%product}} p ON p.[[id]] = v.[[product_id]]'
+            . ' LEFT JOIN {{%stock_movement}} m ON m.[[variant_id]] = v.[[id]]'
+            . ' WHERE p.[[is_active]] = 1 AND v.[[is_active]] = 1'
+            . ' GROUP BY v.[[id]], p.[[low_stock_threshold]]',
+        )->queryAll();
+
+        $counts = ['out' => 0, 'low' => 0, 'healthy' => 0];
+
+        foreach ($rows as $row) {
+            $status = Row::int($row, 'status');
+
+            if ($status === 0) {
+                $counts['out']++;
+            } elseif ($status === 1) {
+                $counts['low']++;
+            } else {
+                $counts['healthy']++;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Active products with the most units in stock.
+     *
+     * @return list<array{name: string, onHand: int}>
+     */
+    public function topProductsByOnHand(int $limit = 8): array
+    {
+        $rows = $this->db->createCommand(
+            'SELECT p.[[name]] AS [[product_name]], COALESCE(SUM(m.[[quantity_change]]), 0) AS [[on_hand]]'
+            . ' FROM {{%product}} p'
+            . ' INNER JOIN {{%variant}} v ON v.[[product_id]] = p.[[id]]'
+            . ' LEFT JOIN {{%stock_movement}} m ON m.[[variant_id]] = v.[[id]]'
+            . ' WHERE p.[[is_active]] = 1 AND v.[[is_active]] = 1'
+            . ' GROUP BY p.[[id]], p.[[name]]'
+            . ' HAVING COALESCE(SUM(m.[[quantity_change]]), 0) > 0'
+            . ' ORDER BY [[on_hand]] DESC, p.[[name]]'
+            . ' LIMIT :limit',
+            ['limit' => $limit],
+        )->queryAll();
+
+        $products = [];
+
+        foreach ($rows as $row) {
+            $products[] = [
+                'name' => Row::string($row, 'product_name'),
+                'onHand' => Row::int($row, 'on_hand'),
+            ];
+        }
+
+        return $products;
+    }
+
+    private function dayStart(): DateTimeImmutable
+    {
+        return (new DateTimeImmutable())->setTime(0, 0);
     }
 
     /**

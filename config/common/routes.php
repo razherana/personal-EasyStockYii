@@ -70,6 +70,10 @@ return [
             Route::post('/stock/movements')->name('stock-movement-create')->middleware($guard(Permission::StockOperate->value))
                 ->action(Web\Stock\CreateMovementAction::class),
 
+            // Analytics
+            Route::get('/analytics')->name('analytics')->middleware($guard(Permission::StockView->value))
+                ->action(Web\Analytics\AnalyticsAction::class),
+
             // Export and import
             Route::get('/export')->name('report-export')->middleware($guard(Permission::Export->value))
                 ->action(Web\Reports\ExportAction::class),

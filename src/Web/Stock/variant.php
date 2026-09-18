@@ -29,42 +29,67 @@ $this->setTitle('Stock · ' . $variant->sku);
 $canOperate = $currentUser->can(Permission::StockOperate);
 $onHand = $level?->onHand ?? 0;
 $csrf = Html::encode($csrf ?? '');
+$isLow = $level?->isLowStock() ?? false;
 ?>
 
-<p class="muted">
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="<?= $urlGenerator->generate('stock-list') ?>">Stock</a>
+    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
     <a href="<?= $urlGenerator->generate('product-view', ['id' => $product->id]) ?>">
         <?= Html::encode($product->name) ?>
     </a>
-    / <span class="mono"><?= Html::encode($variant->sku) ?></span>
-</p>
+    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    <span class="faint mono"><?= Html::encode($variant->sku) ?></span>
+</nav>
 
-<div class="product-header">
+<div class="page-header">
     <div>
-        <h1><?= Html::encode($variant->sku) ?></h1>
-        <p>
+        <h1 class="page-title"><?= Html::encode($variant->sku) ?></h1>
+        <div class="product-meta">
             <?php foreach ($variant->optionLabels as $label): ?>
-                <span class="badge"><?= Html::encode($label) ?></span>
+                <span class="badge badge-info"><?= Html::encode($label) ?></span>
             <?php endforeach ?>
-            <?php if ($variant->isDefault) : ?>
-                <span class="faint">default variant</span>
+            <?php if ($variant->isDefault): ?>
+                <span class="badge">default variant</span>
             <?php endif ?>
             <?php if (!$variant->isActive): ?>
                 <span class="badge">inactive</span>
             <?php endif ?>
-        </p>
+        </div>
     </div>
+
     <div class="stat">
         <span class="stat-label">On hand</span>
         <span class="stat-value"><?= $onHand ?></span>
+        <span class="stat-foot">
+            <?php if ($onHand <= 0): ?>
+                <span class="badge badge-danger">Out of stock</span>
+            <?php elseif ($isLow): ?>
+                <span class="badge badge-warning">Low stock</span>
+            <?php else: ?>
+                <span class="badge badge-success">Healthy</span>
+            <?php endif ?>
+        </span>
     </div>
 </div>
 
 <div class="split">
     <div class="panel">
-        <h2 class="panel-title">Movement history</h2>
+        <div class="panel-header">
+            <div>
+                <h2 class="panel-title">
+                    <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                    Movement history
+                </h2>
+                <p class="panel-subtitle">Newest first; the level is the sum of every entry.</p>
+            </div>
+        </div>
 
         <?php if ($movements === []): ?>
-            <p class="empty-state">No movements recorded for this variant yet.</p>
+            <p class="empty-state">
+                <i class="fa-solid fa-inbox" aria-hidden="true"></i>
+                <span>No movements recorded for this variant yet.</span>
+            </p>
         <?php else: ?>
             <table class="table">
                 <thead>
@@ -80,11 +105,21 @@ $csrf = Html::encode($csrf ?? '');
                 <tbody>
                 <?php foreach ($movements as $movement): ?>
                     <tr>
-                        <td class="nowrap"><?= $movement->createdAt->format('Y-m-d H:i') ?></td>
-                        <td><?= Html::encode($movement->type->label()) ?></td>
-                        <td class="table-numeric"><?= $movement->quantityChange > 0 ? '+' : '' ?><?= $movement->quantityChange ?></td>
+                        <td class="nowrap faint"><?= $movement->createdAt->format('Y-m-d H:i') ?></td>
+                        <td>
+                            <span class="badge <?= $movement->isIncoming() ? 'badge-success' : 'badge-info' ?>">
+                                <i class="fa-solid <?= $movement->isIncoming() ? 'fa-arrow-down' : 'fa-arrow-up' ?>"
+                                   aria-hidden="true"></i>
+                                <?= Html::encode($movement->type->label()) ?>
+                            </span>
+                        </td>
+                        <td class="table-numeric">
+                            <span class="list-value <?= $movement->quantityChange >= 0 ? 'list-value-up' : 'list-value-down' ?>">
+                                <?= $movement->quantityChange > 0 ? '+' : '' ?><?= $movement->quantityChange ?>
+                            </span>
+                        </td>
                         <td><?= Html::encode($movement->reference ?? '') ?></td>
-                        <td><?= Html::encode($movement->note ?? '') ?></td>
+                        <td class="faint"><?= Html::encode($movement->note ?? '') ?></td>
                         <td class="faint"><?= Html::encode($movement->createdByName) ?></td>
                     </tr>
                 <?php endforeach ?>
@@ -95,7 +130,15 @@ $csrf = Html::encode($csrf ?? '');
 
     <?php if ($canOperate): ?>
         <div class="panel">
-            <h2 class="panel-title">Record movement</h2>
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">
+                        <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+                        Record movement
+                    </h2>
+                    <p class="panel-subtitle">Book stock in, out or correct the level.</p>
+                </div>
+            </div>
 
             <form method="post" action="<?= $urlGenerator->generate('stock-movement-create') ?>" class="stack">
                 <input type="hidden" name="_csrf" value="<?= $csrf ?>">
@@ -120,7 +163,7 @@ $csrf = Html::encode($csrf ?? '');
 
                 <div class="field">
                     <label class="field-label" for="reference">Reference</label>
-                    <input type="text" id="reference" name="reference" placeholder="Invoice, delivery note...">
+                    <input type="text" id="reference" name="reference" placeholder="Invoice, delivery note…">
                 </div>
 
                 <div class="field">
@@ -133,7 +176,10 @@ $csrf = Html::encode($csrf ?? '');
                     <textarea id="note" name="note" rows="2"></textarea>
                 </div>
 
-                <button type="submit" class="button">Record movement</button>
+                <button type="submit" class="button">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    Record movement
+                </button>
             </form>
         </div>
     <?php endif ?>

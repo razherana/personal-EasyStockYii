@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Shared\ApplicationParams;
 use App\User\CurrentUserProvider;
 use App\Web\Shared\Flash\FlashMessages;
+use App\Web\Shared\Layout\Main\Navigation;
 use Yiisoft\Aliases\Aliases;
 use Yiisoft\Assets\AssetManager;
 use Yiisoft\Definitions\Reference;
@@ -75,6 +76,7 @@ return [
             'currentRoute' => Reference::to(CurrentRoute::class),
             'currentUser' => Reference::to(CurrentUserProvider::class),
             'flashMessages' => Reference::to(FlashMessages::class),
+            'navigation' => Reference::to(Navigation::class),
         ],
     ],
 

@@ -16,36 +16,46 @@ use Yiisoft\View\WebView;
  */
 
 $this->setTitle('Export');
+
+$icons = [
+    ExportFormat::Csv->value => 'fa-file-csv',
+    ExportFormat::Xlsx->value => 'fa-file-excel',
+    ExportFormat::Pdf->value => 'fa-file-pdf',
+];
 ?>
 
-<h1>Export</h1>
-<p class="muted">Every export is generated from the current data and downloads immediately.</p>
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Export</h1>
+        <p class="page-subtitle">Every export is generated from the current data and downloads immediately.</p>
+    </div>
+</div>
 
-<table class="table">
-    <thead>
-    <tr>
-        <th>Data set</th>
-        <th>Contents</th>
-        <?php foreach ($formats as $format): ?>
-            <th><?= Html::encode($format->label()) ?></th>
-        <?php endforeach ?>
-    </tr>
-    </thead>
-    <tbody>
+<div class="card-grid">
     <?php foreach ($datasets as $dataset): ?>
-        <tr>
-            <td><?= Html::encode($dataset->label()) ?></td>
-            <td class="muted"><?= Html::encode($dataset->description()) ?></td>
-            <?php foreach ($formats as $format): ?>
-                <td>
-                    <a class="button-link"
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">
+                        <i class="fa-solid fa-database" aria-hidden="true"></i>
+                        <?= Html::encode($dataset->label()) ?>
+                    </h2>
+                    <p class="panel-subtitle"><?= Html::encode($dataset->description()) ?></p>
+                </div>
+            </div>
+
+            <div class="page-actions">
+                <?php foreach ($formats as $format): ?>
+                    <a class="button button-quiet"
                        href="<?= $urlGenerator->generate('report-export-download', [
                            'format' => $format->value,
                            'dataset' => $dataset->value,
-                       ]) ?>">Download</a>
-                </td>
-            <?php endforeach ?>
-        </tr>
+                       ]) ?>">
+                        <i class="fa-solid <?= $icons[$format->value] ?? 'fa-file-arrow-down' ?>" aria-hidden="true"></i>
+                        <?= Html::encode($format->label()) ?>
+                    </a>
+                <?php endforeach ?>
+            </div>
+        </div>
     <?php endforeach ?>
-    </tbody>
-</table>
+</div>

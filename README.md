@@ -18,9 +18,11 @@ Built with [Yii 3](https://www.yiiframework.com/) on PHP 8.5, SQLite and server-
   reference, note and the user who recorded it. Levels, low-stock warnings and history are derived from the ledger.
 - **Reports** – export products, stock levels or movements to **CSV**, **Excel (XLSX)** or **PDF**, and import
   products from CSV/XLSX with a downloadable template.
+- **Analytics** – a dashboard of the last two weeks: movement trend, stock health (healthy, low, out of stock) and
+  the products holding the most units, drawn with [Chart.js](https://www.chartjs.org/).
 - **QR codes and a public page** – every product gets a token and an SVG QR code; anyone scanning it sees a
   read-only product summary (stock per variant and its options) without signing in.
-- **Tests and quality gates** – 148 Codeception tests (unit, functional, web, console), Psalm at level 1,
+- **Tests and quality gates** – 157 Codeception tests (unit, functional, web, console), Psalm at level 1,
   PHP CS Fixer, Rector and Composer Dependency Analyser.
 
 ## Requirements
@@ -65,13 +67,13 @@ Add `--no-interaction` to every command when you script or automate them.
 
 Configuration lives in `config/` and is assembled by the Yii config plugin: `config/common/params.php` for
 parameters, `config/common/di/*.php` and `config/web/di/*.php` for the dependency injection container,
-`config/common/routes.php` for routes. After changing the *structure* of `config/configuration.php`, run
+`config/common/routes.php` for routes. After changing the _structure_ of `config/configuration.php`, run
 `composer yii-config-rebuild --no-interaction` to refresh the merge plan.
 
 Environment variables (read in `src/Environment.php`, `.env` is loaded in development):
 
 | Variable        | Default            | Meaning                                                        |
-|-----------------|--------------------|----------------------------------------------------------------|
+| --------------- | ------------------ | -------------------------------------------------------------- |
 | `APP_ENV`       | `dev`              | `dev`, `test` or `prod`; selects `config/environments/<env>/`. |
 | `APP_DEBUG`     | `false`            | Verbose error pages and debug logging.                         |
 | `APP_C3`        | `false`            | Enables Codeception code coverage (`c3.php`).                  |
@@ -85,15 +87,15 @@ The database files are `runtime/database/app.sqlite` (prod and any environment w
 
 The schema is defined by hand-written migrations in `src/Migrations/`:
 
-| Table                 | Contents                                                            |
-|-----------------------|---------------------------------------------------------------------|
-| `user`                | Accounts: username, password hash, display name, email, role, active |
-| `product`             | Products: SKU, name, unit, description, low-stock threshold, QR token |
-| `option_type`         | Option types (`Size`, `Color`, …)                                   |
-| `option_value`        | Values of an option type (`XL`, `Red`, …)                           |
-| `variant`             | One row per combination of option values, with its own SKU          |
-| `variant_option_value`| Which option values make up a variant                               |
-| `stock_movement`      | The stock ledger: variant, type, quantity change, cost, reference, note, user |
+| Table                  | Contents                                                                      |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| `user`                 | Accounts: username, password hash, display name, email, role, active          |
+| `product`              | Products: SKU, name, unit, description, low-stock threshold, QR token         |
+| `option_type`          | Option types (`Size`, `Color`, …)                                             |
+| `option_value`         | Values of an option type (`XL`, `Red`, …)                                     |
+| `variant`              | One row per combination of option values, with its own SKU                    |
+| `variant_option_value` | Which option values make up a variant                                         |
+| `stock_movement`       | The stock ledger: variant, type, quantity change, cost, reference, note, user |
 
 Useful commands:
 
@@ -111,16 +113,16 @@ Permissions are declared in `App\Access\Permission` and granted per role in `con
 (`permissions`). A route is protected by adding the permission middleware to it; the sidebar only shows what the
 signed-in user may open.
 
-| Permission        | admin | manager | staff |
-|-------------------|:-----:|:-------:|:-----:|
-| `product:view`    |   ✔   |    ✔    |   ✔   |
-| `product:manage`  |   ✔   |    ✔    |       |
-| `option:manage`   |   ✔   |    ✔    |       |
-| `stock:view`      |   ✔   |    ✔    |   ✔   |
-| `stock:operate`   |   ✔   |    ✔    |   ✔   |
-| `export`          |   ✔   |    ✔    |       |
-| `import`          |   ✔   |    ✔    |       |
-| `user:manage`     |   ✔   |         |       |
+| Permission       | admin | manager | staff |
+| ---------------- | :---: | :-----: | :---: |
+| `product:view`   |   ✔   |    ✔    |   ✔   |
+| `product:manage` |   ✔   |    ✔    |       |
+| `option:manage`  |   ✔   |    ✔    |       |
+| `stock:view`     |   ✔   |    ✔    |   ✔   |
+| `stock:operate`  |   ✔   |    ✔    |   ✔   |
+| `export`         |   ✔   |    ✔    |       |
+| `import`         |   ✔   |    ✔    |       |
+| `user:manage`    |   ✔   |         |       |
 
 Guests are redirected to `/login`; signed-in users without the permission get a `403` page.
 
@@ -143,17 +145,28 @@ Stock is an append-only ledger – the current level of a variant is the sum of 
 `out` or an `adjustment` that would take the level below zero, EasyStock rejects it. Levels at or below the
 product's low-stock threshold are flagged on the stock page and in the dashboard.
 
+## Analytics
+
+**Analytics** (`/analytics`, permission `stock:view`) summarises the last two weeks:
+
+- a line chart of the units booked in, out and adjusted per day;
+- a doughnut of the active variants by stock health (healthy, low, out of stock);
+- a list of the products holding the most units, with a progress bar per product.
+
+All series are derived from the stock ledger; the aggregates live in `App\Stock\StockRepository`
+(`dailyMovementTotals()`, `levelStatusCounts()`, `topProductsByOnHand()`).
+
 ## Reports
 
 ### Export
 
 **Export** writes a report to `runtime/exports/` and offers it as a download:
 
-| Report    | Columns                                                                                                    |
-|-----------|------------------------------------------------------------------------------------------------------------|
-| Products  | `sku`, `name`, `unit`, `low_stock_threshold`, `variants`, `on_hand`, `active`                              |
+| Report    | Columns                                                                                                                    |
+| --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Products  | `sku`, `name`, `unit`, `low_stock_threshold`, `variants`, `on_hand`, `active`                                              |
 | Stock     | `product_sku`, `product`, `variant_sku`, `options`, `on_hand`, `unit`, `low_stock_threshold`, `low_stock`, `last_movement` |
-| Movements | `date`, `product`, `variant_sku`, `type`, `change`, `reference`, `note`, `unit_cost`, `user`               |
+| Movements | `date`, `product`, `variant_sku`, `type`, `change`, `reference`, `note`, `unit_cost`, `user`                               |
 
 Pick the format with the format selector: `CSV`, `XLSX` (Excel) or `PDF`.
 
@@ -161,15 +174,15 @@ Pick the format with the format selector: `CSV`, `XLSX` (Excel) or `PDF`.
 
 **Import** accepts a `.csv` or `.xlsx` file with these columns (a template is downloadable from the same page):
 
-| Column                | Required | Notes                                                          |
-|-----------------------|:--------:|----------------------------------------------------------------|
-| `sku`                 |    ✔     | Product SKU; existing SKUs are updated                         |
-| `name`                |    ✔     | Product name                                                   |
-| `unit`                |          | Defaults to `piece`                                            |
-| `low_stock_threshold` |          | Integer, defaults to `0`                                       |
-| `active`              |          | `1`/`0`, defaults to `1`                                       |
-| `options`             |          | `Size=XL; Color=Red`, missing option types/values are created  |
-| `quantity`            |          | Opening stock; only applied when the product has one variant   |
+| Column                | Required | Notes                                                         |
+| --------------------- | :------: | ------------------------------------------------------------- |
+| `sku`                 |    ✔     | Product SKU; existing SKUs are updated                        |
+| `name`                |    ✔     | Product name                                                  |
+| `unit`                |          | Defaults to `piece`                                           |
+| `low_stock_threshold` |          | Integer, defaults to `0`                                      |
+| `active`              |          | `1`/`0`, defaults to `1`                                      |
+| `options`             |          | `Size=XL; Color=Red`, missing option types/values are created |
+| `quantity`            |          | Opening stock; only applied when the product has one variant  |
 
 The result page lists how many rows were imported and every rejected row with its line number and reason.
 
@@ -182,9 +195,12 @@ flags – **without authentication**, so it can be printed on a shelf label. Eve
 ## Project structure
 
 ```
-assets/           CSS written by hand (tokens, layout, components, pages, auth)
+assets/           Hand written CSS and JS
+  shared/         Design tokens, base elements and reusable components (every layout)
+  main/           App shell (rail, sidebar, topbar), page styles and the shell script
+  auth/           Sign in page, public product page and their script
 config/           Config plugin: params, DI, routes, per-environment overrides
-public/           Web entry point and public assets
+public/           Web entry point, favicon and public assets
 runtime/          Database files, exported reports, caches, logs
 src/
   Access/         Permissions, role matrix, access checker
@@ -197,9 +213,29 @@ src/
   Shared/         Database helpers, application parameters
   Stock/          Ledger, levels and stock service
   User/           Users, roles, service and the current-user provider
-  Web/            Actions and templates per feature (Auth, Dashboard, Products, …)
+  Web/            Actions and templates per feature (Auth, Analytics, Dashboard, Products, …)
 tests/            Codeception suites: Unit, Functional, Web, Console
 ```
+
+### Interface
+
+Server-rendered templates with hand written CSS; no build step. The shell has two navigation levels: an icon rail
+with the sections a user may open and a sidebar with the links of the active section (built by
+`App\Web\Shared\Layout\Main\Navigation`).
+
+| Piece           | Where                                                | Loaded from   |
+| --------------- | ---------------------------------------------------- | ------------- |
+| Design tokens   | `assets/shared/theme.css`                            | asset bundle  |
+| UI components   | `assets/shared/components.css`                       | asset bundle  |
+| App shell       | `assets/main/layout.css`, `assets/main/app.js`       | asset bundle  |
+| Page styles     | `assets/main/pages.css`                              | asset bundle  |
+| Sign in / public | `assets/auth/auth.css`, `assets/auth/auth.js`       | asset bundle  |
+| Icons           | [Font Awesome 7](https://fontawesome.com/) (web font) | CDN           |
+| Charts          | [Chart.js 4](https://www.chartjs.org/) (analytics page only) | CDN    |
+| Web font        | Plus Jakarta Sans                                    | CDN           |
+
+The CDN links live in `App\Web\Shared\Layout\Common\ThemeAsset` (icons, font) and in the analytics view
+(Chart.js); everything else is published from `assets/` by the Yii asset manager.
 
 ## Tests and quality
 
@@ -211,12 +247,12 @@ composer test                       # all suites
 ./vendor/bin/codecept run Console --no-interaction
 ```
 
-| Suite        | What it covers                                                                          |
-|--------------|-----------------------------------------------------------------------------------------|
-| `Unit`       | Permissions, services, variant generation, exporters, importers, QR codes, pagination    |
-| `Functional` | The application through PSR-7 requests: routing, permissions, forms, CSRF, flash messages |
+| Suite        | What it covers                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------ |
+| `Unit`       | Permissions, services, variant generation, exporters, importers, QR codes, pagination                        |
+| `Functional` | The application through PSR-7 requests: routing, permissions, forms, CSRF, flash messages                    |
 | `Web`        | The running application over HTTP (PhpBrowser): login/logout, redirects, 404 page, public QR page and QR SVG |
-| `Console`    | `user:create` and `seed:demo`, including their validation and exit codes                  |
+| `Console`    | `user:create` and `seed:demo`, including their validation and exit codes                                     |
 
 The test suites run against `runtime/database/test.sqlite`, which is emptied before every test.
 

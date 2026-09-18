@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Web\Shared\Layout\Public;
 
+use App\Web\Shared\Layout\Common\ThemeAsset;
 use Yiisoft\Assets\AssetBundle;
 
 final class PublicAsset extends AssetBundle
@@ -14,5 +15,17 @@ final class PublicAsset extends AssetBundle
 
     public array $css = [
         'auth.css',
+    ];
+
+    public array $js = [
+        'auth.js',
+    ];
+
+    public array $jsOptions = [
+        'defer' => true,
+    ];
+
+    public array $depends = [
+        ThemeAsset::class,
     ];
 }
